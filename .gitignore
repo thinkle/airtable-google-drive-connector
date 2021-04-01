@@ -1,1 +1,2 @@
-Secrets.ts
+node_modules/*
+Secrets.js
