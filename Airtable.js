@@ -31,6 +31,7 @@ function testList() {
   console.log(listRecords(StaffEndpoint, ["psnOID", "Email"]));
 }
 
+/* Update records in AirTable. Note: "patch" is an update. Change to "post" for adding new records. */
 function updateRecords(endpoint, records, method = "patch") {
   if (records.length > 10) {
     let i = 0;

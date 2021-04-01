@@ -1,7 +1,36 @@
+/**
+ * StaffData
+ * 
+ * We pull data from our student information system into google drive in the form
+ * of a CSV file.
+ * 
+ * The code here allows us to:
+ * 1. Make a mapping from our SSID psnOID to AirTable row IDs
+ * 2. Update existing rows in our Staff table with new data from our SIS.
+ * 3. Add new rows to our AirTable Staff table with new data from our SIS.
+ * 4. Check on a timer to see if the CSV file containing the latest SIS data is
+ *    newer than our last update and do the update conditionally.
+***/
+
 const PSNLOOKUP = 'psnOIDLookup';
 const PSNLOOKUPTIME = 'psnOIDLookupTimestamp';
 const LASTUPDATE = 'staffUpdate';
 
+function updateIfNeeded () {
+  let lastUpdate = PropertiesService.getScriptProperties().getProperty(LASTUPDATE) || 0;
+  let fileChange = DriveApp.getFileById(staffCSVID).getLastUpdated().getTime();
+  console.log('Last update at ',lastUpdate);
+  console.log('File changed at ',fileChange);
+  if (fileChange > lastUpdate) {
+    console.log('We need to update');
+    updateAirtable()
+    console.log('Udpate complete');
+  } else {
+    console.log('No need to update);')
+  }
+}
+
+/* Do the update */
 function updateAirtable () {
   let lookup = getPsnOidLookup();
   let data = readStaffCsvData();
@@ -21,26 +50,12 @@ function updateAirtable () {
       additions.push(update);
     }    
   }
-  console.log('Updates look like: ',updates[0],updates[3],updates[10]); 
-  console.log('Additions look like',additions)
   console.log('Add=>',updateRecords(StaffEndpoint,additions,'post'));
   console.log('Update=>',updateRecords(StaffEndpoint,updates));
   PropertiesService.getScriptProperties().setProperty(
     LASTUPDATE,''+new Date().getTime()
   );
   console.log('Update complete!')
-}
-
-function maybeUpdate () {
-  let lastUpdate = PropertiesService.getScriptProperties().getProperty(LASTUPDATE) || 0;
-  let fileChange = DriveApp.getFileById(staffCSVID).getLastUpdated().getTime();
-  console.log('Last update at ',lastUpdate);
-  console.log('File changed at ',fileChange);
-  if (fileChange > lastUpdate) {
-    console.log('We need to update')
-  } else {
-    console.log('No need to update);')
-  }
 }
 
 function testUpdate () {
@@ -84,10 +99,13 @@ function getPsnOidLookup () {
     const now = new Date().getTime();
     const elapsed = now - lastFetch;
     console.log('elapsed since last fetch:',elapsed)
-    if (elapsed < (6 * 60 * 60 * 1000)) {
+    const HOUR = 60 * 60 * 1000;
+    if (elapsed < HOUR) {
+      console.log('Use cached psnOidLookup')
       return JSON.parse(props.getProperty(PSNLOOKUP))
     }
   }
+  console.log('Create psnOidLookup');
   return getPsnOidLookupFromAirtable();  
 }
 
