@@ -1,11 +1,11 @@
 /**
- * StaffData
+ * StudentData
  *
  * We pull data from our student information system into google drive in the form
  * of a CSV file.
  *
  * The code here allows us to:
- * 1. Make a mapping from our SSID psnOID to AirTable row IDs
+ * 1. Make a mapping from our LASID to AirTable row IDs
  * 2. Update existing rows in our Staff table with new data from our SIS.
  * 3. Add new rows to our AirTable Staff table with new data from our SIS.
  * 4. Check on a timer to see if the CSV file containing the latest SIS data is
