@@ -2,7 +2,7 @@ function listRecords(endpoint, fields) {
   let fieldsStatement = fields
     .map((f) => `fields%5B%5D=${encodeURIComponent(f)}`)
     .join("&");
-  let uri = StaffEndpoint + "?" + fieldsStatement;
+  let uri = endpoint + "?" + fieldsStatement;
   console.log("Request", uri);
   let result = JSON.parse(
     UrlFetchApp.fetch(uri, {
@@ -33,12 +33,13 @@ function testList() {
 
 /* Update records in AirTable. Note: "patch" is an update. Change to "post" for adding new records. */
 function updateRecords(endpoint, records, method = "patch") {
+  console.log('Endpoint: ',endpoint,'Method=',method,records.length,'records');
   if (records.length > 10) {
     let i = 0;
     let responses = [];
     while (i < records.length) {
       console.log("Batch starting at", i);
-      responses.push(updateRecords(endpoint, records.slice(i, i + 10)));
+      responses.push(updateRecords(endpoint, records.slice(i, i + 10), method));
       i += 10;
     }
     return responses.join("\n");

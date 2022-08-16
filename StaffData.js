@@ -39,8 +39,8 @@ function updateAirtable () {
   for (let row of data) {
     let id = lookup[row.psnOID]
     let fields = {}
-    for (let key in fieldMap) {
-      fields[key] = fieldMap[key](row)
+    for (let key in staffFieldMap) {
+      fields[key] = staffFieldMap[key](row)
     }
     let update = {fields}
     if (id) {
@@ -66,7 +66,7 @@ function readStaffCsvData () {
   return readCsvToJson(staffCSVID)
 }
 
-fieldMap = {
+staffFieldMap = {
   Email : (r)=>r.psnEmail01,
   First : (r)=>r.psnNameFirst,
   Last : (r)=>r.psnNameLast,

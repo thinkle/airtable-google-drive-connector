@@ -16,10 +16,12 @@ const LASIDLOOKUP = "LasidLookup";
 const LASIDLOOKUPTIME = "LasicTimestamp";
 const LASTSUPDATE = "studentUpdate";
 
-function updateIfNeeded() {
+function updateStudentsIfNeeded() {
   let lastUpdate =
     PropertiesService.getScriptProperties().getProperty(LASTSUPDATE) || 0;
-  let fileChange = DriveApp.getFileById(studentCSVID).getLastUpdated().getTime();
+  let fileChange = DriveApp.getFileById(studentCSVID)
+    .getLastUpdated()
+    .getTime();
   console.log("Last update at ", lastUpdate);
   console.log("File changed at ", fileChange);
   if (fileChange > lastUpdate) {
@@ -35,10 +37,18 @@ function updateIfNeeded() {
 function updateAirtableWithStudents() {
   let lookup = getLasidLookup();
   let data = readStudentCsvData();
+  console.log('Specifically',data.filter((r)=>r.psnNameLast.match(/mcguire/i)))
   let updates = [];
   let additions = [];
   for (let row of data) {
-    let id = lookup[row['relPsnStdOid.stdIDLocal'];
+    if (row.psnNameLast.match(/McGuire/)) {
+      console.log('Got one!',row)
+    }
+    let lasid = row["relPsnStdOid.stdIDLocal"];
+    let id = lookup[lasid];
+    if (!id && lasid[0] == "0") {
+      id = lookup[lasid.substr(1)];
+    }
     let fields = {};
     for (let key in fieldMap) {
       fields[key] = fieldMap[key](row);
@@ -69,17 +79,18 @@ function testUpdate() {
   ]);
 }
 /* Grab Staff Data from CSV in Google Drive */
-function readStaffCsvData() {
-  return readCsvToJson(staffCSVID);
+function readStudentCsvData() {
+  return readCsvToJson(studentCSVID);
 }
 
 fieldMap = {
   Email: (r) => r.psnEmail01,
-  First: (r) => r.psnNameFirst,
-  Last: (r) => r.psnNameLast,
+  //First: (r) => r.psnNameFirst,
+  //Last: (r) => r.psnNameLast,
   YOG: (r) => r["relPsnStdOid.stdYog"],
-  Advisor: (r) => r["relPsnStdOid.stdHomeroom"], 
-  "Full Name": (r) => `${r.psnNameLast}, ${r.psnNameFirst}`,
+  Advisor: (r) => r["relPsnStdOid.stdHomeroom"],
+  Name: (r) => `${r.psnNameLast}, ${r.psnNameFirst}`,
+  LASID: (r) => r["relPsnStdOid.stdIDLocal"],
 };
 
 /* Staff Data format: 
