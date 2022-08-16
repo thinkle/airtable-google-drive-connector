@@ -1,9 +1,12 @@
-function listRecords(endpoint, fields) {
+function listRecords(endpoint, fields, filterByFormula = null) {
   let fieldsStatement = fields
     .map((f) => `fields%5B%5D=${encodeURIComponent(f)}`)
     .join("&");
   let uri = endpoint + "?" + fieldsStatement;
   console.log("Request", uri);
+  if (filterByFormula) {
+    uri += `&filterByFormula=${encodeURIComponent(filterByFormula)}`;
+  }
   let result = JSON.parse(
     UrlFetchApp.fetch(uri, {
       method: "get",
@@ -33,16 +36,26 @@ function testList() {
 
 /* Update records in AirTable. Note: "patch" is an update. Change to "post" for adding new records. */
 function updateRecords(endpoint, records, method = "patch") {
-  console.log('Endpoint: ',endpoint,'Method=',method,records.length,'records');
+  console.log(
+    "Endpoint: ",
+    endpoint,
+    "Method=",
+    method,
+    records.length,
+    "records"
+  );
   if (records.length > 10) {
     let i = 0;
     let responses = [];
     while (i < records.length) {
       console.log("Batch starting at", i);
-      responses.push(updateRecords(endpoint, records.slice(i, i + 10), method));
+      responses = [
+        ...responses,
+        ...updateRecords(endpoint, records.slice(i, i + 10), method).records,
+      ];
       i += 10;
     }
-    return responses.join("\n");
+    return { records: responses };
   }
   let response;
   try {
@@ -61,7 +74,7 @@ function updateRecords(endpoint, records, method = "patch") {
   }
   let responseText = response && response.getContentText();
   console.log("Got response", responseText);
-  return responseText;
+  return JSON.parse(responseText);
 }
 
 function testFetch() {
